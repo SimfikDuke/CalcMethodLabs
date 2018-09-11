@@ -1,0 +1,96 @@
+import matplotlib.pyplot as plt
+import numpy as np
+import math
+import random as rd
+
+N = 5
+arr_x = [1,2,3,4,5]
+arr_y = [2,2,3,4,3]
+
+number_of_steps = 1000
+x_steps = np.linspace(min(arr_x), max(arr_x), number_of_steps)
+
+
+def func_ols(sol, x):
+    res = 0
+    for i in range(0, len(sol)):
+        res += sol[i] * (x ** i)
+    return res
+
+
+def func_ols_exp(sol, x):
+    return math.exp(sol[0]) * (x ** sol[1])
+
+
+def log_or_inf(x):
+    if x > 0:
+        return math.log(x)
+    else:
+        return float("inf")
+
+# linear
+def line():
+    matrix = np.array([
+        [N] + [sum(arr_x)],
+        [sum(arr_x)] + [sum(map(lambda x: x*x, arr_x))]])
+    vals = np.array([sum(arr_y)] + [sum(arr_x[i] * arr_y[i] for i in range(N))])
+    sol = np.linalg.solve(matrix, vals)
+
+
+    y_in_arr = [func_ols(sol, x) for x in arr_x]
+    d = sum(map(lambda x: x*x, list(map(lambda i: y_in_arr[i]-arr_y[i], range(len(arr_y))))))
+    print("linear delta: "+str(d))
+
+    plt.plot(x_steps, [func_ols(sol, x) for x in x_steps])
+    plt.plot(arr_x, arr_y, 'o', c="black")
+
+    print(sol)
+
+# quadratic
+def quadr():
+    matrix = np.array([
+        [sum(map(lambda x: x**0, arr_x))] + [sum(map(lambda x: x**1, arr_x))] + [sum(map(lambda x: x**2, arr_x))],
+        [sum(map(lambda x: x**1, arr_x))] + [sum(map(lambda x: x**2, arr_x))] + [sum(map(lambda x: x**3, arr_x))],
+        [sum(map(lambda x: x**2, arr_x))] + [sum(map(lambda x: x**3, arr_x))] + [sum(map(lambda x: x**4, arr_x))]
+        ])
+    vals = np.array(
+        [sum(arr_y[i] * (arr_x[i]**0) for i in range(N))] +
+        [sum(arr_y[i] * (arr_x[i]**1) for i in range(N))] +
+        [sum(arr_y[i] * (arr_x[i]**2) for i in range(N))]
+        )
+    sol = np.linalg.solve(matrix, vals)
+
+    y_in_arr = [func_ols(sol, x) for x in arr_x]
+    d = sum(map(lambda x: x*x, list(map(lambda i: y_in_arr[i]-arr_y[i], range(len(arr_y))))))
+    print("quadratic delta: "+str(d))
+
+    plt.plot(x_steps, [func_ols(sol, x) for x in x_steps])
+
+    print(sol)
+
+
+#exp function
+def expon():
+    matrix = np.array([
+        [N] + [sum(map(log_or_inf, arr_x))],
+        [sum(map(log_or_inf, arr_x))] + [sum(map(lambda x:x*x, list(map(log_or_inf, arr_x))))]
+        ])
+    vals = np.array(
+        [sum(map(log_or_inf, arr_y))] +
+        [sum(list(map(log_or_inf, arr_x))[i] * list(map(log_or_inf, arr_y))[i] for i in range(N))]
+        )
+    sol = np.linalg.solve(matrix, vals)
+
+    y_in_arr = [func_ols_exp(sol, x) for x in arr_x]
+    d = sum(map(lambda x: x*x, list(map(lambda i: y_in_arr[i]-arr_y[i], range(len(arr_y))))))
+    print("exp delta: "+str(d))
+
+    plt.plot(x_steps, [func_ols_exp(sol, x) for x in x_steps])
+
+    print(sol)
+
+line()
+quadr()
+expon()
+
+plt.show()
